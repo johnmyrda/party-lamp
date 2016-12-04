@@ -1,26 +1,26 @@
 #include <Bounce2.h>
 #include <FastLED.h>
+#include <EEPROM.h>
 
-// Create an ledStrip object and specify the pin it will use.
-#define DATA_PIN A1
-
-#define MIN(a, b) ((a < b) ? a : b)
-#define MAX(a, b) ((a > b) ? a : b)
-
-// Create a buffer for holding the colors (3 bytes per color).
+// Define variable for FastLED usage
 #define NUM_LEDS 60
 #define CHIPSET WS2812B
 #define COLOR_ORDER GRB
+#define DATA_PIN A1
 
+//array for FastLED to use
 CRGB leds[NUM_LEDS];
 
-int partyState = 0;
-int kelvinState = 0;
-const int brightnessPotPin = A0;
-const int buttonParty = 16;
-const int ledButtonParty = 14;
-const int buttonNextPin = 15;
-const int onOffSwitchPin = 19;
+bool partyTime = true;
+#define PARTY_STATE_EEPROM_ADDRESS 0
+byte partyState = 0;
+#define KELVIN_STATE_EEPROM_ADDRESS 1
+byte kelvinState = 0;
+const byte brightnessPotPin = A0;
+const byte buttonParty = 16;
+const byte ledButtonParty = 14;
+const byte buttonNextPin = 15;
+const byte onOffSwitchPin = 19;
 
 #define NUM_COLORTEMPS 3
 CRGB colorTemps[NUM_COLORTEMPS] = {Candle, Tungsten40W, CarbonArc};
@@ -33,6 +33,8 @@ GenericFP patterns[NUM_PATTERNS] = {&rainbowPattern,
                                     &emergencySOS,
                                     &testPattern
                                    };
+
+//variables for frame counting (pattern timing)
 #define FRAME_INTERVAL_DEFAULT 150
 unsigned long frame = 0;
 unsigned long now = millis();
@@ -42,14 +44,13 @@ Bounce buttonNext = Bounce();
 
 void setup()
 {
-  
-  pinMode(A1, OUTPUT);
-  digitalWrite(A1, LOW);
-  for (int i = 0; i <= 10; i++) {
-    pinMode(i, INPUT_PULLUP);
+  if(EEPROM.read(KELVIN_STATE_EEPROM_ADDRESS) <= NUM_COLORTEMPS){
+    kelvinState = EEPROM.read(KELVIN_STATE_EEPROM_ADDRESS);
   }
-  pinMode(15, INPUT_PULLUP);
-  pinMode(21, INPUT_PULLUP);
+  if(EEPROM.read(PARTY_STATE_EEPROM_ADDRESS) <= NUM_PATTERNS){
+    partyState = EEPROM.read(PARTY_STATE_EEPROM_ADDRESS);
+  }
+  pinMode(buttonNextPin, INPUT_PULLUP);
   buttonNext.attach(buttonNextPin);
   pinMode(onOffSwitchPin, INPUT_PULLUP);
   pinMode(buttonParty, INPUT_PULLUP);
@@ -63,35 +64,39 @@ void setup()
 }
 
 void kelvinMode() {
-  kelvinState = getNextIndex(kelvinState, NUM_COLORTEMPS);
-  //Serial.println("kelvinState: " + String(kelvinState));
-  fill_solid(leds, NUM_LEDS, colorTemps[kelvinState]);
+  int prevKelvinState = kelvinState;
+  kelvinState = getNextIndex(kelvinState, NUM_COLORTEMPS, KELVIN_STATE_EEPROM_ADDRESS);
+  if(kelvinState != prevKelvinState || partyTime){
+    partyTime = false;
+    fill_solid(leds, NUM_LEDS, colorTemps[kelvinState]);
+  }
 }
 
 //Returns the value of the brightness dial between 0-1023
 void updateBrightness() {
   int brightness_reading = analogRead(brightnessPotPin);
-  //Serial.print("original: " + String(brightness_reading) + " quantized: ");
   brightness_reading = brightness_reading >> 7; // divide by 128
   brightness_reading = brightness_reading << 5; // multiply by 32
   brightness_reading += 31;
-  //Serial.println(brightness_reading);
   FastLED.setBrightness(brightness_reading);
 }
 
-int getNextIndex(const int current_index, int num_items) {
+int getNextIndex(const int current_index, int num_items, int eeprom_address) {
   buttonNext.update();
   int return_value = current_index;
 
   if (buttonNext.fell()) {
     return_value = (current_index + 1) % num_items;
+    //Only write the state to eeprom when a button press occurs
+    EEPROM.write(eeprom_address, return_value);
   }
   return return_value;
 }
 
 
 void partyMode() {
-  partyState = getNextIndex(partyState, NUM_PATTERNS-1);
+  partyTime = true;
+  partyState = getNextIndex(partyState, NUM_PATTERNS-1, PARTY_STATE_EEPROM_ADDRESS);
   now = millis();
 
   unsigned long newFrame = now / frame_interval;
@@ -110,9 +115,8 @@ void loop()
     digitalWrite(ledButtonParty, LOW);
     kelvinMode();
   }
-
-  // Write the colors to the LED strip.
-  updateBrightness();
+  
+  updateBrightness();  
   FastLED.show();
 }
 
@@ -132,9 +136,7 @@ void gradientPattern() {
 
 void testPattern() {
   CRGB rgb[3] = {CRGB::Red, CRGB::Green, CRGB::Blue};
-  for (byte i = 0; i < NUM_LEDS; i++) {
-    leds[i] = CRGB(rgb[i % 3]);
-  }
+  genericPattern(rgb, 3);
 }
 
 void genericPattern(CRGB * pattern, int length){
