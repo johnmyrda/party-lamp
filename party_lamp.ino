@@ -25,16 +25,17 @@ const byte onOffSwitchPin = 19;
 #define NUM_COLORTEMPS 3
 CRGB colorTemps[NUM_COLORTEMPS] = {Candle, Tungsten40W, CarbonArc};
 
-#define NUM_PATTERNS 5
+#define NUM_PATTERNS 6
 typedef void (* GenericFP)();
 GenericFP patterns[NUM_PATTERNS] = {&rainbowPattern,
                                     &gradientPattern,
                                     &usaPattern,
+                                    &sweetChristmas,
                                     &emergencySOS,
                                     &testPattern
                                    };
 
-//variables for frame counting (pattern timing)
+//variables for frame counting (pattern timing) 
 #define FRAME_INTERVAL_DEFAULT 150
 unsigned long frame = 0;
 unsigned long now = millis();
@@ -59,8 +60,8 @@ void setup()
   FastLED.clear();
   FastLED.show();
   // limit my draw to 1A at 5v of power draw
-  FastLED.setMaxPowerInVoltsAndMilliamps(5,1000);   
-  //Serial.begin(9600);  
+  FastLED.setMaxPowerInVoltsAndMilliamps(5,1000);
+  //Serial.begin(9600); 
 }
 
 void kelvinMode() {
@@ -75,9 +76,12 @@ void kelvinMode() {
 //Returns the value of the brightness dial between 0-1023
 void updateBrightness() {
   int brightness_reading = analogRead(brightnessPotPin);
-  brightness_reading = brightness_reading >> 7; // divide by 128
+  //Serial.print("brightness_reading: " + String(brightness_reading));
+  brightness_reading = sqrt(brightness_reading); //try to delogify
+  brightness_reading = brightness_reading >> 2; // divide by 4
   brightness_reading = brightness_reading << 5; // multiply by 32
   brightness_reading += 31;
+  //Serial.println(" final: " + String(brightness_reading));
   FastLED.setBrightness(brightness_reading);
 }
 
@@ -144,6 +148,12 @@ void genericPattern(CRGB * pattern, int length){
       int index = (frame + i) % length;
       leds[i] = CRGB(pattern[index]);
     }
+  }
+
+void sweetChristmas(){
+  CRGB christmas[6] = {CRGB::Red, CRGB::Red, CRGB::Red,
+                  CRGB::Green, CRGB::Green, CRGB::Green,};
+  genericPattern(christmas, 6);
   }
 
 void usaPattern() {
