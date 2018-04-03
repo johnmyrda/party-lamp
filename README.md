@@ -26,4 +26,7 @@ The Pattern Change/Color Temp change switch is a momentary push button switch, t
 
 #### Pictures
 
-Check out these Instagram posts [1](https://www.instagram.com/p/BhGXK7il3cw/) [2](https://www.instagram.com/p/BhGYIO0FZAk/)
+Glamour pics of the lamp are posted on Instagram
+
+* [Post 1](https://www.instagram.com/p/BhGXK7il3cw/) 
+* [Post 2](https://www.instagram.com/p/BhGYIO0FZAk/)
