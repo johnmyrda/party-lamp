@@ -20,6 +20,6 @@ All of the pattern functions are non-blocking so that the buttons and brightness
 
 I gutted a cheap [desk lamp from Amazon](https://www.amazon.com/gp/product/B00G7QRLYE) and put an [Arduino Pro Micro](https://www.sparkfun.com/products/12640) and a USB battery pack in the base. 
 
-I created a custom light bulb out of PCB pipe and WS2812b LEDs.
+I created a custom light bulb out of PVC pipe and WS2812b LEDs.
 
 The Pattern Change/Color Temp change switch is a momentary push button switch, the Party Mode/Lamp Mode switch uses a Toggle button a red LED, and brightness is controllable with a potentiometer.
