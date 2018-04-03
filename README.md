@@ -23,3 +23,7 @@ I gutted a cheap [desk lamp from Amazon](https://www.amazon.com/gp/product/B00G7
 I created a custom light bulb out of PVC pipe and WS2812b LEDs.
 
 The Pattern Change/Color Temp change switch is a momentary push button switch, the Party Mode/Lamp Mode switch uses a Toggle button a red LED, and brightness is controllable with a potentiometer.
+
+#### Pictures
+
+Check out these Instagram posts [1](https://www.instagram.com/p/BhGXK7il3cw/) [2](https://www.instagram.com/p/BhGYIO0FZAk/)
